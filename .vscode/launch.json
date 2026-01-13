@@ -1,0 +1,57 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [{
+            "name": "Next.js: Dev Server",
+            "type": "node-terminal",
+            "request": "launch",
+            "command": "npm run dev",
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "name": "Next.js: Test Server",
+            "type": "node-terminal",
+            "request": "launch",
+            "command": "npm run test",
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "name": "Next.js: Sit Server",
+            "type": "node-terminal",
+            "request": "launch",
+            "command": "npm run sit",
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "chrome",
+            "request": "launch",
+            "name": "Launch Chrome against localhost",
+            "url": "http://localhost:3000",
+            "webRoot": "${workspaceFolder}"
+        }
+    ],
+    "compounds": [{
+            "name": "Debug Next.js (Dev + Chrome)",
+            "configurations": [
+                "Next.js: Dev Server",
+                "Launch Chrome against localhost"
+            ]
+        },
+        {
+            "name": "Debug Next.js (Test + Chrome)",
+            "configurations": [
+                "Next.js: Test Server",
+                "Launch Chrome against localhost"
+            ]
+        },
+        {
+            "name": "Debug Next.js (Sit + Chrome)",
+            "configurations": [
+                "Next.js: Sit Server",
+                "Launch Chrome against localhost"
+            ]
+        }
+    ]
+}
