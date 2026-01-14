@@ -1,5 +1,5 @@
 import type { User, UserPayload } from "@/app/types/user";
-import type { AuthDomain, AuthSession } from "@/app/services/authService";
+import type {AuthDomain, AuthSession} from "@/app/types/auth";
 import { Menu } from "../types/auth";
 
 type AuthPayload = {

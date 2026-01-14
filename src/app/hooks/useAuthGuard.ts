@@ -2,7 +2,8 @@
 
 import {useEffect,useState} from "react";
 import {useRouter,usePathname} from "next/navigation";
-import {getValidSession,type AuthSession} from "@/app/services/authService";
+import {getValidSession} from "@/app/services/authService";
+import type {AuthSession} from "@/app/types/auth";
 
 type AuthGuardState = {
   isChecking: boolean;
