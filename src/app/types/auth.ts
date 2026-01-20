@@ -27,6 +27,8 @@ export type Menu = {
   ACTIVE: string,
   MENU_ICON: string,
   MENU_ID: number
+  //1
+  //2
 };
 export type AuthResponse = {
   userId: string;
