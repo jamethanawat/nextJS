@@ -29,6 +29,9 @@ export type Menu = {
   MENU_ID: number
   //1
   //2
+  //3
+  //4
+  
 };
 export type AuthResponse = {
   userId: string;
