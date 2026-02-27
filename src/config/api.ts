@@ -1,21 +1,5 @@
-export type AppEnv = "development" | "test" | "sit" | "uat" | "production";
-
-const DEFAULT_API_BASE_URLS: Record<AppEnv, string> = {
-  development: "http://localhost:3001",
-  test: "https://test.example.com",
-  sit: "https://sit.example.com",
-  uat: "https://uat.example.com",
-  production: "https://api.example.com",
-};
-
-const rawEnv =
-  process.env.NEXT_PUBLIC_APP_ENV ?? process.env.NODE_ENV ?? "development";
-
-export const APP_ENV: AppEnv =
-  rawEnv in DEFAULT_API_BASE_URLS ? (rawEnv as AppEnv) : "development";
-
-export const API_BASE_URL =
-  (process.env.NEXT_PUBLIC_API_BASE_URL ?? DEFAULT_API_BASE_URLS[APP_ENV]).replace(
-    /\/$/,
-    ""
-  );
+const DEFAULT_API_BASE_URLS = "http://localhost:44388"
+export const API_BASE_URL = (process.env.NEXT_PUBLIC_API_BASE_URL ?? DEFAULT_API_BASE_URLS).replace(/\/$/,"");
+export const API_BASIC_AUTH = typeof window === "undefined"
+    ? Buffer.from(`${process.env.NEXT_PUBLIC_API_BASIC_AUTH_USER}:${process.env.NEXT_PUBLIC_API_BASIC_AUTH_PASS}`).toString("base64")
+   : btoa(`${process.env.NEXT_PUBLIC_API_BASIC_AUTH_USER}:${process.env.NEXT_PUBLIC_API_BASIC_AUTH_PASS}`);

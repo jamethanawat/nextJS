@@ -1,21 +1,28 @@
-import { API_BASE_URL,API_BASIC_AUTH } from "@/config/api";
-import type { AuthResponse, LoginPayload } from "@/app/types/auth";
+import { API_BASE_URL, API_BASIC_AUTH } from "@/config/api";
 import { getAuthToken } from "@/app/services/authService";
-const baseUrl = API_BASE_URL.replace(/\/+$/, "");
+import type {
+  ContractCustomer,
+  ContractData,
+  ContractDistrChan,
+  ContractShipTo,
+} from "@/app/types/contract";
 
-type AuthOptions = { auth?: 'basic' | 'bearer' | 'none' };
+const baseUrl = API_BASE_URL.replace(/\/+$/, "");
+const CONTRACT_ENDPOINT = `${baseUrl}/master/contract`;
+
+type AuthOptions = { auth?: "basic" | "bearer" | "none" };
 
 type RequestOptions = Omit<RequestInit, "body"> & {
   body?: unknown;
 } & AuthOptions;
 
 async function request<T>(url: string, options: RequestOptions = {}): Promise<T> {
-  const { body, headers, auth = 'bearer', ...rest } = options;
+  const { body, headers, auth = "bearer", ...rest } = options;
 
   const authHeaders: Record<string, string> = {};
-  if (auth === 'basic') {
+  if (auth === "basic") {
     authHeaders.Authorization = `Basic ${API_BASIC_AUTH}`;
-  } else if (auth === 'bearer') {
+  } else if (auth === "bearer") {
     const token = getAuthToken();
     if (token) {
       authHeaders.Authorization = `Bearer ${token}`;
@@ -47,6 +54,19 @@ async function request<T>(url: string, options: RequestOptions = {}): Promise<T>
 
   return (await response.json()) as T;
 }
-export async function login(payload: LoginPayload): Promise<AuthResponse> {
- return request<AuthResponse>(`${baseUrl}/LoginLDAP`, {auth: 'basic' , method: "POST", body: payload });
+
+export async function getContractList(): Promise<ContractData[]> {
+  return request<ContractData[]>(`${CONTRACT_ENDPOINT}/list`);
+}
+
+export async function getContractCustomers(): Promise<ContractCustomer[]> {
+  return request<ContractCustomer[]>(`${CONTRACT_ENDPOINT}/customers`);
+}
+
+export async function getContractShipTo(): Promise<ContractShipTo[]> {
+  return request<ContractShipTo[]>(`${CONTRACT_ENDPOINT}/ship-to`);
+}
+
+export async function getContractDistrChan(): Promise<ContractDistrChan[]> {
+  return request<ContractDistrChan[]>(`${CONTRACT_ENDPOINT}/distribution-channels`);
 }

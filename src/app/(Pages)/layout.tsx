@@ -2,21 +2,18 @@
 
 import Header from './layout/header/Header'
 import Sidebar from './layout/sidebar/Sidebar'
- import { useAuthGuard } from '@/app/hooks/useAuthGuard'
+import { useAuthGuard } from '@/app/hooks/useAuthGuard'
+import BreakpointDebugBadge from '@/app/components/shared/BreakpointDebugBadge'
+import ThemedLoadingSpinner from '@/app/components/shared/ThemedLoadingSpinner'
 
 export default function Layout({
   children,
 }: Readonly<{
   children: React.ReactNode
 }>) {
-   const { isChecking } = useAuthGuard();
+  const { isChecking } = useAuthGuard()
   if (isChecking) {
-    // แสดง Loading Spinner หรือ Skeleton ระหว่างรอตรวจสอบสิทธิ์
-    return (
-      <div className="flex h-screen w-full items-center justify-center bg-slate-50">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-slate-200 border-t-slate-900" />
-      </div>
-    );
+    return <ThemedLoadingSpinner label='loading...' />
   }
   return (
     <div className='flex w-full min-h-screen'>
@@ -30,7 +27,7 @@ export default function Layout({
           <Header />
           {/* Body Content  */}
           {/* <div className={`container mx-auto px-6 py-30`}>{children}</div>*/}
-          <div className={`container mx-auto px-1 py-30`}>{children}</div>
+          <div className={`container mx-auto px-6 py-30`}>{children}</div>
         </div>
       </div>
       {/* vercel button */}
@@ -50,6 +47,7 @@ export default function Layout({
           Deploy to Vercel
         </span>
       </a> */}
+      {process.env.NODE_ENV !== 'production' && <BreakpointDebugBadge />}
     </div>
   )
 }

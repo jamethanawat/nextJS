@@ -1,4 +1,6 @@
-export type AuthDomain = "admin" | "sale";
+import type { APIResponse } from "./api";
+
+export type AuthDomain = "admin" | "sale" | "ไม่ผ่าน AD";
 
 export type AuthSession = {
   userId: string;
@@ -27,10 +29,8 @@ export type Menu = {
   ACTIVE: string,
   MENU_ICON: string,
   MENU_ID: number
-  //1
-  //2
 };
-export type AuthResponse = {
+export type AuthData = {
   userId: string;
   name: string;
   lastName ? : string;
@@ -40,8 +40,10 @@ export type AuthResponse = {
   Menu:Menu[];
 };
 
+export type AuthResponse = APIResponse<AuthData>;
+
 export type LoginPayload = {
-  username: string;
-  password: string;
-  domain: AuthDomain;
+  Username: string;
+  Password: string;
+  Domain: AuthDomain;
 };

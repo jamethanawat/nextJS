@@ -1,11 +1,25 @@
 import type { User, UserPayload } from "@/app/types/user";
 import type {AuthDomain, AuthSession} from "@/app/types/auth";
 import { Menu } from "../types/auth";
+import type {
+  CancelSoLogItem,
+  CreateBillingCount,
+  CreateBillingItem,
+  CreateBillingLogItem,
+  MurCount,
+  MurItem,
+} from "@/app/types/createBilling";
+import type {
+  ContractCustomer,
+  ContractData,
+  ContractDistrChan,
+  ContractShipTo,
+} from "@/app/types/contract";
 
 type AuthPayload = {
-  username: string;
-  password: string;
-  domain: AuthDomain;
+  Username: string;
+  Password: string;
+  Domain: AuthDomain;
 };
 
 const now = () => new Date().toISOString();
@@ -34,7 +48,7 @@ let users: User[] = [
     updatedAt: now(),
   },
 ];
-let menu: Menu[] = [
+export let menu: Menu[] = [
  {
    "TABLENAME": "M_MENU",
    "ID": 1,
@@ -495,7 +509,7 @@ let menu: Menu[] = [
    "TABLENAME": "M_MENU",
    "ID": 15,
    "MENU_NAME": "Contract/Quotation No",
-   "MENU_URL": "~/SaNo",
+   "MENU_URL": "~/Contract",
    "MENU_LEVEL": 2,
    "PARENT_MENU_ID": 3,
    "DESCRIPTION": "",
@@ -854,12 +868,12 @@ export async function mockAuthenticate(
 ): Promise<AuthSession> {
   const expiresAt = new Date(Date.now() + 60 * 60 * 1000).toISOString();//60 minutes
   //const expiresAt = new Date(Date.now() + 1 * 60 * 1000).toISOString();//1 minutes
-  const [firstName, lastName = "User"] = payload.username.split(".");
+  const [firstName, lastName = "User"] = payload.Username.split(".");
   const menus = menu
 
   return {
-    userId: `user-${payload.domain}-${payload.username}`,
-    name: firstName || payload.username || "User",
+    userId: `user-${payload.Domain}-${payload.Username}`,
+    name: firstName || payload.Username || "User",
     lastName,
     token: createMockToken(expiresAt),
     expiresAt,
@@ -922,4 +936,309 @@ export async function mockDeleteUser(id: string): Promise<void> {
     throw new Error("User not found");
   }
   users = users.filter((item) => item.id !== id);
+}
+
+const MOCK_API_DELAY_MS = 250;
+
+const sleep = async (ms = MOCK_API_DELAY_MS) =>
+  new Promise<void>((resolve) => setTimeout(resolve, ms));
+
+const cloneList = <T>(list: T[]): T[] => list.map((item) => ({ ...item }));
+
+const createBillingCountMock: CreateBillingCount = {
+  SAVE_DRAFT: 0,
+  PTT_APPROVE: 0,
+  PTT_REJECT: 10,
+  WAIT_CREATE_SO: 6,
+  CREATE_SO_ERROR: 0,
+  CANCEL_SO_ERROR: 7,
+  WAIT_FOR_CREATE_BILLING: 0,
+  WAIT_FOR_SAP_RESULT: 14,
+  BILLING_WITH_ERROR: 5,
+  BILLING_WITH_SUCCESS: 23,
+  WAIT_FOR_SAP_RESULT_CANCEL: 0,
+  BILLING_WITH_ERROR_CANCEL: 0,
+};
+
+const murCountMock: MurCount = {
+  WAIT_SAP_CAL_MUR: 5,
+  CAL_MUR_ERROR: 2,
+  CAL_MUR_SUCCESS: 15,
+  WAIT_GENERATE_MUR: 3,
+  GENERATE_MUR_ERROR: 1,
+  GENERATE_MUR_SUCCESS: 12,
+  WAIT_CREATE_MUR: 4,
+  CREATE_MUR_ERROR: 0,
+  CREATE_MUR_SUCCESS: 20,
+  WAIT_CANCEL_MUR: 1,
+  CANCEL_MUR_ERROR: 0,
+};
+
+const createBillingItemsMock: CreateBillingItem[] = Array.from(
+  { length: 20 },
+  (_, i) => {
+    const n = i + 1;
+    return {
+      id: n,
+      date: `2023-10-${n.toString().padStart(2, "0")}`,
+      customer: `Customer ${n} Co., Ltd.`,
+      supplier: `Supplier ${String.fromCharCode(65 + (i % 5))}`,
+      plant: `${1000 + i}`,
+      sloc: `SLOC ${2000 + i}`,
+      contractNo: `CON-${2023000 + i}`,
+      qtyKg: (((n * 731) % 10000) + 0.11).toFixed(2),
+      qtyTon: (((n * 37) % 10) + 0.11).toFixed(2),
+      qtyMmb: (((n * 53) % 100) + 0.11).toFixed(2),
+      grPostingDate: `2023-10-${(n + 1).toString().padStart(2, "0")}`,
+      grQtyMmb: (((n * 61) % 100) + 0.22).toFixed(2),
+      additionalGrQtyTon: "0.00",
+      gainLossQtyMmb: "0.00",
+      price: (((n * 1703) % 50000) + 0.23).toFixed(2),
+      transportCost: (((n * 131) % 1000) + 0.31).toFixed(2),
+      invoiceStatus:
+        i % 3 === 0 ? "Completed" : i % 3 === 1 ? "Pending" : "Failed",
+      soDocNo: `SO-${3000 + i}`,
+      doNo: `DO-${4000 + i}`,
+      giDoc: `GI-${5000 + i}`,
+      billNo: `BILL-${6000 + i}`,
+      fiDocNo: `FI-${7000 + i}`,
+      gainLossDocNo: `GL-${8000 + i}`,
+      gainLossDocYear: "2023",
+      blNo: `BL-2025${9000 + i}`,
+      ocrStatus: i % 2 === 0 ? "Pass" : "Fail",
+      poSaNo: `PO-${10000 + i}`,
+      grDoc: `GR-${11000 + i}`,
+      year: "2023",
+      dailyNo: `DN-${12000 + i}`,
+    };
+  }
+);
+
+const murItemsMock: MurItem[] = Array.from({ length: 20 }, (_, i) => {
+  const n = i + 1;
+  return {
+    id: n,
+    finalFlag: i % 2 === 0 ? "Y" : "N",
+    date: `2023-10-${n.toString().padStart(2, "0")}`,
+    customer: `Customer ${n} Co., Ltd.`,
+    supplier: `Supplier ${String.fromCharCode(65 + (i % 5))}`,
+    plant: `${1000 + i}`,
+    sloc: `SLOC ${2000 + i}`,
+    contractNo: `CON-${2023000 + i}`,
+    qtyKg: (((n * 769) % 10000) + 0.15).toFixed(2),
+    qtyTon: (((n * 47) % 10) + 0.12).toFixed(2),
+    qtyMmb: (((n * 59) % 100) + 0.13).toFixed(2),
+    price: (((n * 1663) % 50000) + 0.25).toFixed(2),
+    transportCost: (((n * 101) % 1000) + 0.16).toFixed(2),
+    billingStatus: i % 3 === 0 ? "Completed" : "Pending",
+    invoiceStatus:
+      i % 3 === 0 ? "Completed" : i % 3 === 1 ? "Pending" : "Failed",
+    actualQty: (((n * 43) % 100) + 0.17).toFixed(2),
+    murCapInYear: (((n * 89) % 1000) + 0.19).toFixed(2),
+    accumMur: (((n * 67) % 500) + 0.21).toFixed(2),
+    outstandingMur: (((n * 71) % 200) + 0.22).toFixed(2),
+    outstandingTopAmt: (((n * 97) % 5000) + 0.24).toFixed(2),
+    currentMurQty: (((n * 53) % 100) + 0.18).toFixed(2),
+    murAmount: (((n * 139) % 10000) + 0.3).toFixed(2),
+    excessQty: (((n * 29) % 50) + 0.31).toFixed(2),
+    excessAmount: (((n * 41) % 2000) + 0.32).toFixed(2),
+    soDocNo: `SO-${3000 + i}`,
+    blNo: `BL-2025${9000 + i}`,
+    poSaNo: `PO-${10000 + i}`,
+    grDoc: `GR-${11000 + i}`,
+    year: "2023",
+  };
+});
+
+function resolveCreateBillingItemOrThrow(id: number): CreateBillingItem {
+  const item = createBillingItemsMock.find((x) => x.id === id);
+  if (!item) {
+    throw new Error("Create Billing row not found");
+  }
+  return item;
+}
+
+function buildCreateBillingLogs(createBillingId: number): CreateBillingLogItem[] {
+  const item = resolveCreateBillingItemOrThrow(createBillingId);
+  return Array.from({ length: 5 }, (_, i) => {
+    const n = i + 1;
+    const prefix = createBillingId * 100 + n;
+    return {
+      id: prefix,
+      postingDate: `2023-11-${(n + createBillingId)
+        .toString()
+        .padStart(2, "0")}`,
+      contract: item.contractNo,
+      lgort: `L${((createBillingId + i) % 9) + 1}01`,
+      qtyMmb: (((createBillingId * 17 + n * 11) % 100) + 0.11).toFixed(2),
+      addQtyTon: (((createBillingId * 7 + n * 3) % 5) + 0.05).toFixed(2),
+      blNo: item.blNo,
+      revision: `R${(i % 3) + 1}`,
+      process: i % 2 === 0 ? "CREATE BILL" : "REPROCESS",
+      doNo: item.doNo,
+      giDoc: item.giDoc,
+      billNo: item.billNo,
+      postingStatus:
+        i % 3 === 0 ? "SUCCESS" : i % 3 === 1 ? "PENDING" : "ERROR",
+      fiDoc: item.fiDocNo,
+      dueDate: `2023-12-${(n + createBillingId).toString().padStart(2, "0")}`,
+      result:
+        i % 3 === 2
+          ? "Posting failed: pricing condition not found."
+          : "Posting completed successfully.",
+      prntStatus: i % 2 === 0 ? "PRINTED" : "WAIT",
+      spoolNo: `SP-${8000 + prefix}`,
+      printDate:
+        i % 2 === 0
+          ? `2023-12-${(n + createBillingId).toString().padStart(2, "0")}`
+          : "-",
+      printTime: i % 2 === 0 ? `10:${(i % 6)}${(createBillingId % 10)}:00` : "-",
+    };
+  });
+}
+
+function buildCancelSoLogs(createBillingId: number): CancelSoLogItem[] {
+  const item = resolveCreateBillingItemOrThrow(createBillingId);
+  return Array.from({ length: 3 }, (_, i) => {
+    const n = i + 1;
+    return {
+      id: createBillingId * 10 + n,
+      createBillingId,
+      dailyNo: item.dailyNo,
+      soDocNo: item.soDocNo,
+      xmlFile: `CANCEL_SO_${createBillingId}_${n.toString().padStart(2, "0")}.xml`,
+      zresult: i % 3 === 0 ? "S" : i % 3 === 1 ? "W" : "E",
+      message:
+        i % 3 === 0
+          ? "Cancel SO completed successfully."
+          : i % 3 === 1
+            ? "Cancel SO request queued for SAP processing."
+            : "Cancel SO failed: document already reversed.",
+      createDatetime: `2026-02-${(createBillingId + n)
+        .toString()
+        .padStart(2, "0")} 10:${(i % 6)}${(createBillingId % 10)}:00`,
+    };
+  });
+}
+
+export async function mockFetchCreateBillingList(): Promise<CreateBillingItem[]> {
+  await sleep();
+  return cloneList(createBillingItemsMock);
+}
+
+export async function mockFetchMurList(): Promise<MurItem[]> {
+  await sleep();
+  return cloneList(murItemsMock);
+}
+
+export async function mockFetchCreateBillingCount(): Promise<CreateBillingCount> {
+  await sleep();
+  return { ...createBillingCountMock };
+}
+
+export async function mockFetchMurCount(): Promise<MurCount> {
+  await sleep();
+  return { ...murCountMock };
+}
+
+export async function mockFetchCreateBillingLogById(
+  id: number
+): Promise<CreateBillingLogItem[]> {
+  await sleep();
+  return cloneList(buildCreateBillingLogs(id));
+}
+
+export async function mockFetchCancelSoLogById(
+  id: number
+): Promise<CancelSoLogItem[]> {
+  await sleep();
+  return cloneList(buildCancelSoLogs(id));
+}
+
+const contractListMock: ContractData[] = [
+  {
+    id: 1,
+    saNo: "C001",
+    customerName: "Customer A",
+    customerId: "1",
+    shipToId: "101",
+    startDate: "2024-01-01",
+    endDate: "2024-12-31",
+    plant: "Plant 1",
+    status: "Active",
+    isActive: true,
+    isPriceTransport: true,
+    distrChan: "01",
+    refDocCat: "G",
+    remark: "Test Contract 1",
+  },
+  {
+    id: 2,
+    saNo: "Q002",
+    customerName: "Customer B",
+    customerId: "2",
+    shipToId: "102",
+    startDate: "2024-02-01",
+    endDate: "2024-11-30",
+    plant: "Plant 2",
+    status: "Inactive",
+    isActive: false,
+    isPriceTransport: false,
+    distrChan: "02",
+    refDocCat: "B",
+    remark: "Test Quotation 2",
+  },
+  {
+    id: 3,
+    saNo: "C003",
+    customerName: "Customer C",
+    customerId: "3",
+    shipToId: "103",
+    startDate: "2024-03-01",
+    endDate: "2024-10-31",
+    plant: "Plant 1",
+    status: "Active",
+    isActive: true,
+    isPriceTransport: true,
+    distrChan: "01",
+    refDocCat: "G",
+    remark: "",
+  },
+];
+
+const contractCustomersMock: ContractCustomer[] = [
+  { id: "1", name: "Customer A" },
+  { id: "2", name: "Customer B" },
+  { id: "3", name: "Customer C" },
+];
+
+const contractShipToMock: ContractShipTo[] = [
+  { id: "101", name: "Ship To A", customerId: "1" },
+  { id: "102", name: "Ship To B", customerId: "2" },
+  { id: "103", name: "Ship To C", customerId: "3" },
+];
+
+const contractDistrChanMock: ContractDistrChan[] = [
+  { id: "01", name: "Direct Sales" },
+  { id: "02", name: "Wholesale" },
+];
+
+export async function mockFetchContractList(): Promise<ContractData[]> {
+  await sleep();
+  return cloneList(contractListMock);
+}
+
+export async function mockFetchContractCustomers(): Promise<ContractCustomer[]> {
+  await sleep();
+  return cloneList(contractCustomersMock);
+}
+
+export async function mockFetchContractShipTo(): Promise<ContractShipTo[]> {
+  await sleep();
+  return cloneList(contractShipToMock);
+}
+
+export async function mockFetchContractDistrChan(): Promise<ContractDistrChan[]> {
+  await sleep();
+  return cloneList(contractDistrChanMock);
 }

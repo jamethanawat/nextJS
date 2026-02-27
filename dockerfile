@@ -1,29 +1,46 @@
-# 1. Use official Node.js LTS image
-FROM node:20-alpine
+# Stage 1: Builder - This stage builds the Next.js application
+FROM node:20-alpine AS builder
 
-# 2. Set working directory
+# Set the working directory
 WORKDIR /app
 
-# 3. Print Node and npm versions (optional, for verification)
-RUN node -v && npm -v
-
-# 4. Copy package.json and package-lock.json
+# Copy package files and install all dependencies (including dev)
 COPY package*.json ./
-
-# 5. Install dependencies
 RUN npm install
 
-# 6. Copy all project files
+# Copy the rest of the source code
 COPY . .
 
-# # 7. Build Next.js project
+# Remove any existing .env files (like .env.local) copied from host to prevent conflicts
+RUN rm -f .env*
+
+# Accept the build argument for the environment file (default to .env)
+ARG ENV_FILE=.env
+# Copy the specified env file to .env so Next.js picks it up during build
+COPY ${ENV_FILE} .env
+
+# Build the application
 RUN npm run build
 
-# 8. Expose port 3001
+# Stage 2: Runner - This stage creates the final, lean production image
+FROM node:20-alpine AS runner
+WORKDIR /app
+
+ENV NODE_ENV=production
+
+# Copy only the necessary files from the builder stage
+COPY --from=builder /app/public ./public
+COPY --from=builder /app/.next ./.next
+COPY --from=builder /app/package*.json ./
+
+# Install only production dependencies
+RUN npm install --production
+
+# Run the application as a non-root user for better security
+USER node
+
+# Expose the port the app will run on (can be overridden by docker-compose)
 EXPOSE 3001
 
-# 9. Set environment variable for port
-ENV PORT=3001
-
-# 10. Start the app in production mode on port 3001
+# The command to start the Next.js server
 CMD ["npm", "run", "start"]

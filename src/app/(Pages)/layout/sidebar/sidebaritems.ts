@@ -37,7 +37,7 @@ const SidebarContent: MenuItem[] = [
     heading: 'Home',
     children: [
       {
-        name: 'Modern',
+        name: 'Home',
         icon: 'solar:widget-2-linear',
         id: uniqueId(),
         url: '/',
@@ -45,7 +45,28 @@ const SidebarContent: MenuItem[] = [
       },
     ],
   },
-
+  {
+    heading: 'Transaction',
+    children: [
+      {
+        name: 'Create Billing',
+        icon: 'solar:server-linear',
+        id: uniqueId(),
+        url: '/Transaction/CreateBilling',
+      },
+    ],
+  },
+    {
+    heading: 'Master',
+    children: [
+      {
+        name: 'Contract/Quotation No',
+        icon: 'solar:server-linear',
+        id: uniqueId(),
+        url: '/Master/Contract',
+      },
+    ],
+  },
   {
     heading: 'pages',
     children: [

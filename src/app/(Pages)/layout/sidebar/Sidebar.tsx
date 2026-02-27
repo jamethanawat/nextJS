@@ -17,6 +17,7 @@ import {
 } from 'tailwind-sidebar'
 import 'tailwind-sidebar/styles.css'
 import { convertMenuToSidebarItems, getValidSession } from '@/app/services/authService'
+import { MenuItem } from './sidebaritems'
 
 interface SidebarItemType {
   heading?: string
@@ -49,7 +50,7 @@ const renderSidebarItems = (
     // Heading
     if (item.heading) {
       return (
-        <div className='mb-1' key={item.heading}>
+        <div className='mb-1' key={`heading-${index}-${item.heading}`}>
           <AMMenu
             subHeading={item.heading}
             ClassName='hide-menu leading-21 text-sidebar-foreground dark:text-sidebar-foreground font-bold uppercase text-xs'
@@ -62,9 +63,10 @@ const renderSidebarItems = (
     if (item.children?.length) {
       return (
         <AMSubmenu
-          key={item.id}
+          key={item.id || `submenu-${index}`}
           icon={iconElement}
           title={item.name}
+          textFontSize='text-xs'
           ClassName='mt-0.5 text-sidebar-foreground dark:text-sidebar-foreground'>
           {renderSidebarItems(item.children, currentPath, onClose, true)}
         </AMSubmenu>
@@ -81,7 +83,7 @@ const renderSidebarItems = (
       : `mt-0.5 text-sidebar-foreground dark:text-sidebar-foreground`
 
     return (
-      <div onClick={onClose} key={index}>
+      <div onClick={onClose} key={item.id || `item-${index}`}>
         <AMMenuItem
           key={item.id}
           icon={iconElement}
@@ -94,6 +96,7 @@ const renderSidebarItems = (
           disabled={item.disabled}
           badgeContent={item.isPro ? 'Pro' : undefined}
           component={Link}
+          textFontSize='text-xs'
           className={`${itemClassNames}`}>
           <span className='truncate flex-1'>{item.title || item.name}</span>
         </AMMenuItem>
@@ -109,19 +112,23 @@ const SidebarLayout = ({ onClose }: { onClose?: () => void }) => {
   const [sidebarItems, setSidebarItems] = useState<SidebarItemType[]>([])
 
   useEffect(() => {
-    if (useMocks) {
-      const mockItems = SidebarContent.flatMap((section) => [
-        ...(section.heading ? [{ heading: section.heading }] : []),
-        ...(section.children || []),
-      ])
-      setSidebarItems(mockItems as unknown as SidebarItemType[])
+    let items: MenuItem[] = []
+    if (!useMocks) {
+      items = SidebarContent
     } else {
       const session = getValidSession()
       if (session?.menus) {
-        const items = convertMenuToSidebarItems(session.menus)
-        setSidebarItems(items as unknown as SidebarItemType[])
+        items = convertMenuToSidebarItems(session.menus)
       }
     }
+
+    const flattenedItems = items.flatMap((item) => {
+      if (item.heading) {
+        return [{ heading: item.heading }, ...(item.children || [])]
+      }
+      return [item]
+    })
+    setSidebarItems(flattenedItems as unknown as SidebarItemType[])
   }, [useMocks])
 
   // Only allow "light" or "dark" for AMSidebar
@@ -148,30 +155,8 @@ const SidebarLayout = ({ onClose }: { onClose?: () => void }) => {
       {/* Sidebar items */}
 
       <SimpleBar className='h-[calc(100vh-100px)]'>
-        <div className='px-6'>
+        <div className='px-4'>
           {renderSidebarItems(sidebarItems, pathname, onClose)}
-
-          {/* Promo Section */}
-          <div className='mt-9  overflow-hidden'>
-            <div className='flex w-full bg-lightprimary rounded-lg p-6'>
-              <div className='lg:w-1/2 w-full'>
-                <h5 className='text-base text-sidebar-foreground'>
-                  Haven't Account?
-                </h5>
-                <Button className='whitespace-nowrap mt-2 text-[13px]'>
-                  Get Pro
-                </Button>
-              </div>
-              <div className='lg:w-1/2 w-full -mt-4 ml-[26px] scale-[1.2] shrink-0'>
-                <Image
-                  src={'/images/backgrounds/rocket.png'}
-                  alt='rocket'
-                  width={100}
-                  height={100}
-                />
-              </div>
-            </div>
-          </div>
         </div>
       </SimpleBar>
     </AMSidebar>

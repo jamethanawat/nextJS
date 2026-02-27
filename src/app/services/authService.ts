@@ -1,7 +1,8 @@
 import { mockAuthenticate } from "@/app/services/mockApi";
 import { login } from "./api/authApi";
-import type { AuthDomain, AuthSession, LoginPayload } from "@/app/types/auth";
+import type { AuthDomain, AuthResponse, AuthSession, LoginPayload } from "@/app/types/auth";
 import { Menu } from "../types/auth";
+import { menu } from "@/app/services/mockApi";
 import type { MenuItem, ChildItem } from "@/app/(Pages)/layout/sidebar/sidebaritems";
 
 const AUTH_STORAGE_KEY = "auth.session";
@@ -94,7 +95,7 @@ function storeSession(session: AuthSession): void {
 }
 
 export function convertMenuToSidebarItems(menus: Menu[]): MenuItem[] {
-  const buildTree = (parentId: number | null): ChildItem[] => {
+  const buildTree = (parentId: number): ChildItem[] => {
     return menus
       .filter((m) => m.PARENT_MENU_ID === parentId)
       .sort((a, b) => a.ROW_ORDER - b.ROW_ORDER)
@@ -103,15 +104,47 @@ export function convertMenuToSidebarItems(menus: Menu[]): MenuItem[] {
         return {
           id: m.MENU_ID,
           name: m.MENU_NAME,
-          icon: m.MENU_ICON,
-          url: m.MENU_URL?.replace(/^~/, "") || undefined,
+          icon: 'solar:server-linear',//m.MENU_ICON,
+          url: m.MENU_URL
+            ? m.MENU_URL === "~"
+              ? "/"
+              : m.ACTIVEMAIN && m.MENU_URL.startsWith('~/')
+                ? `/${m.ACTIVEMAIN}${m.MENU_URL.substring(1)}`
+                : m.MENU_URL.replace(/^~/, "")
+            : undefined,
           children: children.length > 0 ? children : undefined,
         };
       });
   };
 
-  // Start building from root items (where PARENT_MENU_ID is null)
-  return buildTree(null) as MenuItem[];
+  const roots = menus
+    .filter((m) => m.MENU_LEVEL === 1 && m.PARENT_MENU_ID === null)
+    .sort((a, b) => a.ROW_ORDER - b.ROW_ORDER);
+
+  return roots.map((m) => {
+    const hasUrl = m.MENU_URL && m.MENU_URL.trim() !== "";
+    const children = buildTree(m.MENU_ID);
+
+    if (hasUrl) {
+      return {
+        heading: m.MENU_NAME,
+        children: [
+          {
+            id: m.MENU_ID,
+            name: m.MENU_NAME,
+            icon:'solar:server-linear', //m.MENU_ICON,
+            url: m.MENU_URL === "~" ? "/" : (m.MENU_URL?.replace(/^~/, "") || undefined),
+            children: children.length > 0 ? children : undefined,
+          },
+        ],
+      };
+    }
+
+    return {
+      heading: m.MENU_NAME,
+      children: children,
+    };
+  });
 }
 
 export async function authenticateUser(
@@ -124,14 +157,16 @@ export async function authenticateUser(
   }
 
   const data = await login(payload);
+  const res= data as AuthResponse;
+  console.log(res)
 
   const session: AuthSession = {
-    userId: data.userId,
-    name: data.name,
-    lastName: data.lastName ?? data.lastname ?? "",
-    token: data.token,
-    expiresAt: data.expiresAt,
-    menus: data.Menu,
+      userId: res.data.userId ??"",
+    name: res.data.name ?? "",
+    lastName: res.data.lastName ?? res.data.lastname ?? "",
+    token: res.data.token,
+    expiresAt: new Date(Date.now() + 60 * 60 * 1000).toISOString(),
+    menus: menu,
   };
 
   storeSession(session);

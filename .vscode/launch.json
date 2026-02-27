@@ -25,6 +25,13 @@
             "cwd": "${workspaceFolder}"
         },
         {
+            "name": "Next.js: Uat Server",
+            "type": "node-terminal",
+            "request": "launch",
+            "command": "npm run uat",
+            "cwd": "${workspaceFolder}"
+        },
+        {
             "type": "chrome",
             "request": "launch",
             "name": "Launch Chrome against localhost",
@@ -50,6 +57,13 @@
             "name": "Debug Next.js (Sit + Chrome)",
             "configurations": [
                 "Next.js: Sit Server",
+                "Launch Chrome against localhost"
+            ]
+        },
+       {
+            "name": "Debug Next.js (Uat + Chrome)",
+            "configurations": [
+                "Next.js: Uat Server",
                 "Launch Chrome against localhost"
             ]
         }

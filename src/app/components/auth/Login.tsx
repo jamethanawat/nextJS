@@ -29,7 +29,7 @@ export const Login = () => {
       setError(null);
   
       try {
-        await authenticateUser({ username: username.trim(), password, domain });
+        await authenticateUser({ Username: username.trim(), Password:password, Domain: domain });
         const returnUrl = sessionStorage.getItem("returnUrl");
         sessionStorage.removeItem("returnUrl");
         router.replace(returnUrl || "/");
@@ -96,6 +96,7 @@ export const Login = () => {
                 >
                   <option value="admin">Admin</option>
                   <option value="sale">Sale</option>
+                  <option value="ไม่ผ่าน AD">ไม่ผ่าน AD</option>
                 </select>
               </label>
   
