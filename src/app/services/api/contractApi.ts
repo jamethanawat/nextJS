@@ -1,72 +1,98 @@
-import { API_BASE_URL, API_BASIC_AUTH } from "@/config/api";
-import { getAuthToken } from "@/app/services/authService";
+import { API_BASE_URL } from "@/config/api";
+import { request } from "@/app/services/api/httpClient";
+import {
+  mapContractToSavePayload,
+  mapContractListItem,
+  mapContractListRows,
+  mapContractMasterData,
+} from "@/app/services/api/mappers/contractMapper";
 import type {
-  ContractCustomer,
+  ContractByIdApiResponse,
   ContractData,
-  ContractDistrChan,
-  ContractShipTo,
+  ContractSaveApiResponse,
+  ContractMasterApiResponse,
+  ContractMasterData,
+  ContractListApiResponse,
 } from "@/app/types/contract";
 
 const baseUrl = API_BASE_URL.replace(/\/+$/, "");
-const CONTRACT_ENDPOINT = `${baseUrl}/master/contract`;
+const CONTRACT_ENDPOINT = `${baseUrl}/SaNo`;
+const MASTER_ENDPOINT = `${baseUrl}/Master`;
 
-type AuthOptions = { auth?: "basic" | "bearer" | "none" };
-
-type RequestOptions = Omit<RequestInit, "body"> & {
-  body?: unknown;
-} & AuthOptions;
-
-async function request<T>(url: string, options: RequestOptions = {}): Promise<T> {
-  const { body, headers, auth = "bearer", ...rest } = options;
-
-  const authHeaders: Record<string, string> = {};
-  if (auth === "basic") {
-    authHeaders.Authorization = `Basic ${API_BASIC_AUTH}`;
-  } else if (auth === "bearer") {
-    const token = getAuthToken();
-    if (token) {
-      authHeaders.Authorization = `Bearer ${token}`;
-    }
+function ensureStatus200(
+  status: number,
+  defaultMessage: string,
+  data?: unknown
+): void {
+  if (status === 200) {
+    return;
   }
 
-  const response = await fetch(url, {
-    ...rest,
-    headers: {
-      "Content-Type": "application/json",
-      ...authHeaders,
-      ...headers,
-    },
-    body: body ? JSON.stringify(body) : undefined,
-  }).catch((error) => {
-    console.log("Fetch error:", error);
-    throw error;
-  });
+  const detail = extractErrorDetail(data);
+  throw new Error(
+    detail
+      ? `${defaultMessage}. API status: ${status}. Reason: ${detail}`
+      : `${defaultMessage}. API status: ${status}`
+  );
+}
 
-  if (!response.ok) {
-    const message = await response.text();
-    console.log("API Error:", response.status, message);
-    throw new Error(message || `Request failed with status ${response.status}`);
+function extractErrorDetail(data: unknown): string | undefined {
+  if (typeof data === "string" && data.trim()) {
+    return data.trim();
   }
 
-  if (response.status === 204) {
-    return undefined as T;
+  if (typeof data !== "object" || data === null) {
+    return undefined;
   }
 
-  return (await response.json()) as T;
+  const payload = data as Record<string, unknown>;
+  const directMessage = payload.message ?? payload.massage;
+
+  if (typeof directMessage === "string" && directMessage.trim()) {
+    return directMessage.trim();
+  }
+
+  return undefined;
 }
 
 export async function getContractList(): Promise<ContractData[]> {
-  return request<ContractData[]>(`${CONTRACT_ENDPOINT}/list`);
+  const res = await request<ContractListApiResponse>(`${CONTRACT_ENDPOINT}/GetByWhere`);
+  ensureStatus200(res.status, "Failed to fetch contract list");
+  const rows = res.data.Table ?? [];
+  return mapContractListRows(rows);
 }
 
-export async function getContractCustomers(): Promise<ContractCustomer[]> {
-  return request<ContractCustomer[]>(`${CONTRACT_ENDPOINT}/customers`);
+export async function getContractById(id: number): Promise<ContractData> {
+  const res = await request<ContractByIdApiResponse>(
+    `${CONTRACT_ENDPOINT}/GetById?id=${id}`
+  );
+  ensureStatus200(res.status, "Failed to fetch contract detail");
+  const rows = res.data?.Table ??[];
+  const item = rows[0];
+
+  if (!item) {
+    throw new Error(`Contract id ${id} not found`);
+  }
+
+  return mapContractListItem(item);
 }
 
-export async function getContractShipTo(): Promise<ContractShipTo[]> {
-  return request<ContractShipTo[]>(`${CONTRACT_ENDPOINT}/ship-to`);
+export async function saveContract(
+  source: Partial<ContractData>
+): Promise<string> {
+  const payload = mapContractToSavePayload(source);
+  const res = await request<ContractSaveApiResponse>(`${CONTRACT_ENDPOINT}/Save`, {
+    method: "POST",
+    body: payload,
+  });
+  ensureStatus200(res.status, "Failed to save contract", res.data);
+
+  const message = extractErrorDetail(res.data);
+  return message || "Save successful.";
 }
 
-export async function getContractDistrChan(): Promise<ContractDistrChan[]> {
-  return request<ContractDistrChan[]>(`${CONTRACT_ENDPOINT}/distribution-channels`);
+export async function getContractMasterData(): Promise<ContractMasterData> {
+  const res = await request<ContractMasterApiResponse>(`${MASTER_ENDPOINT}/MasterSaNo`);
+  ensureStatus200(res.status, "Failed to fetch contract master data");
+  return mapContractMasterData(res.data ?? res.result);
 }

@@ -95,7 +95,7 @@ export const Login = () => {
                   className="rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition focus:border-slate-400"
                 >
                   <option value="admin">Admin</option>
-                  <option value="sale">Sale</option>
+                  <option value="Customer">Customer</option>
                   <option value="ไม่ผ่าน AD">ไม่ผ่าน AD</option>
                 </select>
               </label>

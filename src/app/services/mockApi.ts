@@ -1213,9 +1213,9 @@ const contractCustomersMock: ContractCustomer[] = [
 ];
 
 const contractShipToMock: ContractShipTo[] = [
-  { id: "101", name: "Ship To A", customerId: "1" },
-  { id: "102", name: "Ship To B", customerId: "2" },
-  { id: "103", name: "Ship To C", customerId: "3" },
+  { id: "101", shipTo: "101", shipToName: "Ship To A", customerId: "1" },
+  { id: "102", shipTo: "102", shipToName: "Ship To B", customerId: "2" },
+  { id: "103", shipTo: "103", shipToName: "Ship To C", customerId: "3" },
 ];
 
 const contractDistrChanMock: ContractDistrChan[] = [

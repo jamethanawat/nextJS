@@ -16,7 +16,7 @@ import {
   AMSubmenu,
 } from 'tailwind-sidebar'
 import 'tailwind-sidebar/styles.css'
-import { convertMenuToSidebarItems, getValidSession } from '@/app/services/authService'
+import { getValidSession } from '@/app/services/authService'
 import { MenuItem } from './sidebaritems'
 
 interface SidebarItemType {
@@ -113,12 +113,12 @@ const SidebarLayout = ({ onClose }: { onClose?: () => void }) => {
 
   useEffect(() => {
     let items: MenuItem[] = []
-    if (!useMocks) {
+    if (useMocks) {
       items = SidebarContent
     } else {
       const session = getValidSession()
-      if (session?.menus) {
-        items = convertMenuToSidebarItems(session.menus)
+      if (session?.sidebarItems) {
+        items = session.sidebarItems
       }
     }
 

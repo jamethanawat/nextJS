@@ -9,10 +9,12 @@ import type {
   ContractCustomer,
   ContractData,
   ContractDistrChan,
+  ContractMasterData,
   ContractShipTo,
 } from "@/app/types/contract";
 
 const USE_MOCKS = process.env.NEXT_PUBLIC_USE_MOCKS !== "false";
+let contractMasterDataPromise: Promise<ContractMasterData> | null = null;
 
 export async function fetchContractList(): Promise<ContractData[]> {
   if (USE_MOCKS) {
@@ -21,23 +23,47 @@ export async function fetchContractList(): Promise<ContractData[]> {
   return contractApi.getContractList();
 }
 
-export async function fetchContractCustomers(): Promise<ContractCustomer[]> {
+export async function fetchContractById(id: number): Promise<ContractData> {
   if (USE_MOCKS) {
-    return mockFetchContractCustomers();
+    const list = await mockFetchContractList();
+    const item = list.find((contract) => contract.id === id);
+    if (!item) {
+      throw new Error(`Contract id ${id} not found`);
+    }
+    return item;
   }
-  return contractApi.getContractCustomers();
+
+  return contractApi.getContractById(id);
 }
 
-export async function fetchContractShipTo(): Promise<ContractShipTo[]> {
+export async function saveContractData(
+  source: Partial<ContractData>
+): Promise<string> {
   if (USE_MOCKS) {
-    return mockFetchContractShipTo();
+    return "Save successful.";
   }
-  return contractApi.getContractShipTo();
+
+  return contractApi.saveContract(source);
 }
 
-export async function fetchContractDistrChan(): Promise<ContractDistrChan[]> {
+export async function fetchContractMasterData(): Promise<ContractMasterData> {
   if (USE_MOCKS) {
-    return mockFetchContractDistrChan();
+    const [customers, shipToList, distrChanList] = await Promise.all([
+      mockFetchContractCustomers(),
+      mockFetchContractShipTo(),
+      mockFetchContractDistrChan(),
+    ]);
+
+    return {
+      customers,
+      shipToList,
+      distrChanList,
+    };
   }
-  return contractApi.getContractDistrChan();
+
+  if (!contractMasterDataPromise) {
+    contractMasterDataPromise = contractApi.getContractMasterData();
+  }
+
+  return contractMasterDataPromise;
 }
